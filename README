@@ -1,3 +1,12 @@
+==== Pure Python ROS ====
+
+First you must build the python-ros package. From inside a ros sourced
+environment
+
+  $python build.py
+
+This will create src,bin,data directories. You can now run ROS nodes
+
   $source ./env.sh
   $./rosmaster --core -p 11311
 
