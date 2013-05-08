@@ -1,0 +1,6 @@
+  $source ./env.sh
+  $./rosmaster --core -p 11311
+
+  $cd bin
+  $./rostopic pub /foo std_msgs/String bar
+
