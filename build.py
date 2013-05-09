@@ -8,16 +8,17 @@ def _copy_pkg_data(p, file, ddir):
     dest = os.path.join(ddir,p)
 
     if os.path.isdir(src):
+        dest = os.path.join(dest,os.path.basename(src))
         shutil.copytree(src,dest)
     else:
         if not os.path.isdir(dest):
             os.makedirs(dest)
         shutil.copy2(src,dest)
+
     
 def _import_and_copy(p, odir):
     mod = __import__(p)
     fn = mod.__file__
-    print fn
     if os.path.basename(fn).startswith("__init__"):
         shutil.copytree(
             os.path.dirname(fn),
@@ -27,6 +28,7 @@ def _import_and_copy(p, odir):
     elif os.path.isfile(fn) and fn.endswith(".pyc"):
         #this is just a file, not a module. copy the py (not pyc) file
         shutil.copy2(fn[0:-1],odir)
+
     return fn
 
 def _copy_executables(p, bdir):
@@ -108,6 +110,10 @@ def import_packages(srcdir,bindir,ddir,*pkgs):
     for p in pkgs:
         roslib.load_manifest(p)
         fn = _import_and_copy(p, srcdir)
+
+        base  = os.path.abspath(roslib.packages.get_pkg_dir(p, required=True))
+        _copy_pkg_data(p, os.path.join(base,"manifest.xml"), ddir)
+
         for _bin in ("bin","scripts"):
             _bindir = os.path.abspath(
                             os.path.join(os.path.dirname(fn), "..","..",_bin))
