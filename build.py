@@ -62,7 +62,8 @@ import os.path
 import tempfile
 
 os.environ['ROS_PACKAGE_PATH'] = tempfile.mkdtemp()
-os.environ['ROS_ROOT'] = os.environ.get('ROS_ROOT','/usr/local/bin')
+os.environ['ROS_ROOT'] = os.environ.get('ROS_ROOT','/usr/local')
+os.environ['ROS_BUILD'] = os.environ['ROS_ROOT']
 os.environ['ROS_MASTER_URI'] = os.environ.get('ROS_MASTER_URI','http://localhost:11311')
 
 from roslib.scriptutil import is_interactive, set_interactive

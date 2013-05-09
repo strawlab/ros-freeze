@@ -1,2 +1,2 @@
 export PYTHONPATH=`pwd`/src
-export ROS_ROOT=`pwd`/bin
+export ROS_ROOT=`pwd`
