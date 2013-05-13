@@ -42,18 +42,13 @@ def _copy_executables(p, bdir):
                         shutil.copy2(path,os.path.join(bdir,f))
                     break
 
-def import_msgs(srcdir,bindir,ddir,*pkgs):
-    for p in pkgs:
-        import_packages(srcdir,bindir,ddir,p)
-        _copy_pkg_data(p, "msg", ddir)
-
-def import_roslaunch(srcdir,bindir,ddir):
+def _import_roslaunch(srcdir,bindir,ddir):
     import_packages(srcdir,bindir,ddir,"rosmaster","roslaunch")
     _copy_pkg_data("roslaunch","roscore.xml",ddir)
 
     #FIXME: rewrite roscore here...
 
-def import_roslib(srcdir,bindir,ddir):
+def _import_roslib(srcdir,bindir,ddir):
     _import_and_copy("ros",srcdir)
     _import_and_copy("roslib",srcdir)
     #rewrite roslib to make load_manifest a noop and to set some env variables
@@ -102,9 +97,19 @@ roslib.manifest._manifest_file_by_dir = _manifest_file_by_dir
     with open(os.path.join(srcdir,'roslib','__init__.py'),'w') as f:
         f.write(contents)
 
-def import_ros_binaries(bdir):
+def _import_ros_binaries(bdir):
     rosroot = os.environ['ROS_ROOT']
     _copy_executables(os.path.join(rosroot,"bin"), bdir)
+
+def import_msgs(srcdir,bindir,ddir,*pkgs):
+    for p in pkgs:
+        import_packages(srcdir,bindir,ddir,p)
+        _copy_pkg_data(p, "msg", ddir)
+
+def import_srvs(srcdir,bindir,ddir,*pkgs):
+    for p in pkgs:
+        import_packages(srcdir,bindir,ddir,p)
+        _copy_pkg_data(p, "srv", ddir)
 
 def import_packages(srcdir,bindir,ddir,*pkgs):
     for p in pkgs:
@@ -120,22 +125,25 @@ def import_packages(srcdir,bindir,ddir,*pkgs):
             if os.path.isdir(_bindir):
                 _copy_executables(_bindir, bindir)
 
-if __name__ == "__main__":
-    srcdir = "./src"
-    bindir = "./bin"
-    datadir = "./data"
-
+def import_ros_core(srcdir, bindir, ddir):
     for d in (srcdir,bindir,datadir):
         if os.path.exists(d):
             shutil.rmtree(d)
         os.mkdir(d)
 
-    import_roslib(srcdir,bindir,datadir)
-    import_roslaunch(srcdir,bindir,datadir)
+    _import_roslib(srcdir,bindir,datadir)
+    _import_roslaunch(srcdir,bindir,datadir)
+    _import_ros_binaries(bindir)
 
-    import_ros_binaries(bindir)
-
+    import_srvs(srcdir,bindir,datadir,"std_srvs")
     import_msgs(srcdir,bindir,datadir,"std_msgs","geometry_msgs","rosgraph_msgs")
-
     import_packages(srcdir,bindir,datadir,"rosgraph","rostopic","rosnode","rospy","rosbag")
+
+if __name__ == "__main__":
+    srcdir = "./src"
+    bindir = "./bin"
+    datadir = "./data"
+
+    import_ros_core(srcdir, bindir, datadir)
+
 
