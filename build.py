@@ -1,3 +1,4 @@
+import glob
 import shutil
 import os.path
 import roslib.packages
@@ -125,7 +126,7 @@ def import_packages(srcdir,bindir,ddir,*pkgs):
             if os.path.isdir(_bindir):
                 _copy_executables(_bindir, bindir)
 
-def import_ros_core(srcdir, bindir, ddir):
+def import_ros_core(srcdir="./src", bindir="./bin", datadir="./data"):
     for d in (srcdir,bindir,datadir):
         if os.path.exists(d):
             shutil.rmtree(d)
@@ -139,11 +140,36 @@ def import_ros_core(srcdir, bindir, ddir):
     import_msgs(srcdir,bindir,datadir,"std_msgs","geometry_msgs","rosgraph_msgs")
     import_packages(srcdir,bindir,datadir,"rosgraph","rostopic","rosnode","rospy","rosbag")
 
+def get_disutils_cmds(srcdir="./src", bindir="./bin", datadir="./data"):
+    kwargs = {
+        "packages":[],
+        "py_modules":[],
+        "package_data":{},
+    }
+    
+    for f in glob.glob(os.path.join(srcdir,"*")):
+        fn = os.path.basename(f)
+        pkgdd = os.path.join(datadir,fn)
+        #distutils requires a package relative datapath because distutils
+        pkgreldd = os.path.relpath(pkgdd,f)
+        if os.path.isdir(f):
+            kwargs["packages"].append(fn)
+            if os.path.isdir(pkgdd):
+                kwargs["package_data"][fn] = [
+                    os.path.join(pkgreldd,"manifest.xml"),
+                    os.path.join(pkgreldd,"msg","*.msg"),
+                    os.path.join(pkgreldd,"srv","*.srv"),
+                ]
+                
+        elif os.path.isfile(f):
+            kwargs["py_modules"].append(os.path.splitext(fn)[0])
+
+    kwargs["scripts"] = [f for f in glob.glob(os.path.join(bindir,"*")) if os.path.isfile(f)]
+    
+    kwargs["package_dir"] = {'': 'src'}
+
+    return kwargs
+
 if __name__ == "__main__":
-    srcdir = "./src"
-    bindir = "./bin"
-    datadir = "./data"
-
     import_ros_core(srcdir, bindir, datadir)
-
 
