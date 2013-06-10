@@ -4,6 +4,12 @@ import os.path
 import filecmp
 import roslib.packages
 
+def _glob_dirs(root, recursive=False):
+    if recursive:
+        return [os.path.join(_root,_d) for _root,_dirnames,_filenames in os.walk(root) for _d in _dirnames]
+    else:
+        return [i for i in glob.glob(os.path.join(root,"*")) if os.path.isdir(i)]
+
 def _copy_pkg_data(p, file, ddir):
     src = os.path.join(
             roslib.packages.get_pkg_dir(p, required=True),file)
@@ -28,8 +34,8 @@ def _import_and_copy(p, odir):
             srcs = [os.path.dirname(fn)]
             outs = [os.path.join(odir,p)]
         else:
-            srcs = [i for i in glob.glob("%s/src/*" % src) if os.path.isdir(i)]
-            outs = [os.path.join(odir,os.path.basename(i)) for i in glob.glob("%s/src/*" % src) if os.path.isdir(i)]
+            srcs = _glob_dirs(os.path.join(src,"src"))
+            outs = [os.path.join(odir,os.path.basename(i)) for i in _glob_dirs(os.path.join(src,"src"))]
 
         for src,out in zip(srcs,outs):
             if os.path.isdir(out):
@@ -139,7 +145,7 @@ def import_packages(srcdir,bindir,ddir,*pkgs):
         base  = os.path.abspath(roslib.packages.get_pkg_dir(p, required=True))
         _copy_pkg_data(p, os.path.join(base,"manifest.xml"), ddir)
 
-        for _bin in ("bin","scripts"):
+        for _bin in ("bin","scripts","nodes"):
             _bindir = os.path.abspath(
                             os.path.join(os.path.dirname(fn), "..","..",_bin))
             if os.path.isdir(_bindir):
@@ -178,23 +184,31 @@ def get_disutils_cmds(srcdir, bindir, datadir):
         "py_modules":[],
         "package_data":{},
     }
-    
-    for f in glob.glob(os.path.join(srcdir,"*")):
+
+    for f in glob.glob(os.path.join(srcdir,"*.py")):
         fn = os.path.basename(f)
-        pkgdd = os.path.join(datadir,fn)
-        #distutils requires a package relative datapath because distutils
-        pkgreldd = os.path.relpath(pkgdd,f)
-        if os.path.isdir(f):
-            kwargs["packages"].append(fn)
+        kwargs["py_modules"].append(os.path.splitext(fn)[0])
+    
+    for f in _glob_dirs(srcdir, recursive=True):
+        relf = f.replace(srcdir,'')
+        if relf[0] == '/': relf = relf[1:]
+        #create a package name 
+        pn = ".".join(relf.split('/'))
+        kwargs["packages"].append(pn)
+
+    for f in _glob_dirs(datadir, recursive=False):
+        #only ship data for packages that we are shipping the source too
+        fn = os.path.basename(f)
+        if fn in kwargs["packages"]:
+            #distutils requires a package relative datapath because distutils
+            pkgdd = os.path.join(datadir,fn)
+            pkgreldd = os.path.relpath(pkgdd,os.path.join(srcdir,fn))
             if os.path.isdir(pkgdd):
                 kwargs["package_data"][fn] = [
                     os.path.join(pkgreldd,"manifest.xml"),
                     os.path.join(pkgreldd,"msg","*.msg"),
                     os.path.join(pkgreldd,"srv","*.srv"),
                 ]
-                
-        elif os.path.isfile(f):
-            kwargs["py_modules"].append(os.path.splitext(fn)[0])
 
     kwargs["scripts"] = [f for f in glob.glob(os.path.join(bindir,"*")) if os.path.isfile(f)]
     
