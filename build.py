@@ -1,6 +1,7 @@
 import glob
 import shutil
 import os.path
+import filecmp
 import roslib.packages
 
 def _copy_pkg_data(p, file, ddir):
@@ -21,11 +22,29 @@ def _import_and_copy(p, odir):
     mod = __import__(p)
     fn = mod.__file__
     if os.path.basename(fn).startswith("__init__"):
-        shutil.copytree(
-            os.path.dirname(fn),
-            os.path.join(odir,p),
-            ignore=shutil.ignore_patterns("*.pyc")
-        )
+        src = roslib.packages.get_pkg_dir(p, required=False)
+
+        if src is None:
+            srcs = [os.path.dirname(fn)]
+            outs = [os.path.join(odir,p)]
+        else:
+            srcs = [i for i in glob.glob("%s/src/*" % src) if os.path.isdir(i)]
+            outs = [os.path.join(odir,os.path.basename(i)) for i in glob.glob("%s/src/*" % src) if os.path.isdir(i)]
+
+        for src,out in zip(srcs,outs):
+            if os.path.isdir(out):
+                dcmp = filecmp.dircmp(src,out)
+                diffs = dcmp.left_only + dcmp.right_only + dcmp.diff_files
+                diffs = [diff for diff in diffs if not diff.endswith("pyc")]
+                if diffs:
+                    print "NAME CLASH, PYTHON PACKAGE %s ALREADY EXISTS, IGNORING %s" % (out,src)
+                continue
+            shutil.copytree(
+                src,
+                out,
+                ignore=shutil.ignore_patterns("*.pyc","*.cpp","*.c","*.png")
+            )
+
     elif os.path.isfile(fn) and fn.endswith(".pyc"):
         #this is just a file, not a module. copy the py (not pyc) file
         shutil.copy2(fn[0:-1],odir)
@@ -126,7 +145,12 @@ def import_packages(srcdir,bindir,ddir,*pkgs):
             if os.path.isdir(_bindir):
                 _copy_executables(_bindir, bindir)
 
-def import_ros_core(srcdir="./src", bindir="./bin", datadir="./data"):
+def import_ros_core(working_dir, *pkgs):
+
+    srcdir = os.path.join(working_dir,"src")
+    bindir = os.path.join(working_dir,"bin")
+    datadir = os.path.join(working_dir,"data")
+
     for d in (srcdir,bindir,datadir):
         if os.path.exists(d):
             shutil.rmtree(d)
@@ -136,11 +160,19 @@ def import_ros_core(srcdir="./src", bindir="./bin", datadir="./data"):
     _import_roslaunch(srcdir,bindir,datadir)
     _import_ros_binaries(bindir)
 
-    import_srvs(srcdir,bindir,datadir,"std_srvs")
-    import_msgs(srcdir,bindir,datadir,"std_msgs","geometry_msgs","rosgraph_msgs")
-    import_packages(srcdir,bindir,datadir,"rosgraph","rostopic","rosnode","rospy","rosbag")
+    assert type(pkgs) == tuple
 
-def get_disutils_cmds(srcdir="./src", bindir="./bin", datadir="./data"):
+    all_srvs = ["std_srvs"] + list(pkgs)
+    all_msgs = ["std_msgs","geometry_msgs","rosgraph_msgs"] + list(pkgs)
+    all_pkgs = ["rosgraph","rostopic","rosnode","rospy","rosbag"] + list(pkgs)
+
+    import_srvs(srcdir,bindir,datadir,*all_srvs)
+    import_msgs(srcdir,bindir,datadir,*all_msgs)
+    import_packages(srcdir,bindir,datadir,*all_pkgs)
+
+    return srcdir,bindir,datadir
+
+def get_disutils_cmds(srcdir, bindir, datadir):
     kwargs = {
         "packages":[],
         "py_modules":[],
@@ -171,5 +203,10 @@ def get_disutils_cmds(srcdir="./src", bindir="./bin", datadir="./data"):
     return kwargs
 
 if __name__ == "__main__":
-    import_ros_core(srcdir, bindir, datadir)
+    import tempfile
+    tdir = tempfile.mkdtemp()
+
+    import_ros_core(tdir)
+
+    print "package data in", tdir
 
