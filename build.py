@@ -129,7 +129,7 @@ def load_manifest(*args):
     pass
 
 def _get_pkg_dir(package, required=True, ros_root=None, ros_package_path=None):
-    p = pkg_resources.resource_filename(__name__,os.path.join('share',package))
+    p = pkg_resources.resource_filename(__name__,os.path.join('..','share',package))
     print "monkey patched get_pkg/stack_dir",package,"=",p
     return p
 
