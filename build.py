@@ -270,6 +270,12 @@ def get_disutils_cmds(srcdir, bindir, datadir):
     
     kwargs["package_dir"] = {'': 'src'}
 
+    if "package_data" in kwargs:
+        kwargs["include_package_data"] = True
+
+    import pprint
+    pprint.pprint(kwargs)
+
     return kwargs
 
 if __name__ == "__main__":
