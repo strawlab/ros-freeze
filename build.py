@@ -114,8 +114,7 @@ def _import_roslib(srcdir,bindir,ddir):
 import sys
 import os.path
 import tempfile
-
-DDIR = os.path.join(sys.prefix,'share')
+import pkg_resources
 
 os.environ['ROS_PACKAGE_PATH'] = tempfile.mkdtemp()
 os.environ['ROS_ROOT'] = os.environ.get('ROS_ROOT',sys.prefix)
@@ -130,7 +129,7 @@ def load_manifest(*args):
     pass
 
 def _get_pkg_dir(package, required=True, ros_root=None, ros_package_path=None):
-    p = os.path.join(DDIR,package)
+    p = pkg_resources.resource_filename(__name__,os.path.join('share',package))
     print "monkey patched get_pkg/stack_dir",package,"=",p
     return p
 
