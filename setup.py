@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 from build import import_ros_core, import_ros_package, get_disutils_cmds
 
