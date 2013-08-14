@@ -110,15 +110,15 @@ def _import_roslib(srcdir,bindir,ddir):
     _import_and_copy("roslib",srcdir)
     #rewrite roslib to make load_manifest a noop and to set some env variables
 
-    #FIXME: use setuptools to get the installation /bin path and datadir
     contents = """
+import sys
 import os.path
 import tempfile
 
-DDIR = os.path.expanduser('~/Programming/python-ros/data/')
+DDIR = os.path.join(sys.prefix,'share')
 
 os.environ['ROS_PACKAGE_PATH'] = tempfile.mkdtemp()
-os.environ['ROS_ROOT'] = os.environ.get('ROS_ROOT','/usr/local')
+os.environ['ROS_ROOT'] = os.environ.get('ROS_ROOT',sys.prefix)
 os.environ['ROS_BUILD'] = os.environ['ROS_ROOT']
 os.environ['ROS_MASTER_URI'] = os.environ.get('ROS_MASTER_URI','http://localhost:11311')
 
@@ -238,7 +238,7 @@ def get_disutils_cmds(srcdir, bindir, datadir):
     kwargs = {
         "packages":[],
         "py_modules":[],
-        "package_data":{},
+        "data_files":[],
     }
 
     for f in glob.glob(os.path.join(srcdir,"*.py")):
@@ -260,21 +260,16 @@ def get_disutils_cmds(srcdir, bindir, datadir):
             pkgdd = os.path.join(datadir,fn)
             pkgreldd = os.path.relpath(pkgdd,os.path.join(srcdir,fn))
             if os.path.isdir(pkgdd):
-                kwargs["package_data"][fn] = [
-                    os.path.join(pkgreldd,"manifest.xml"),
-                    os.path.join(pkgreldd,"msg","*.msg"),
-                    os.path.join(pkgreldd,"srv","*.srv"),
-                ]
+                for step in os.walk(pkgdd):
+                    p,d,dfs = step
+                    if dfs:
+                        dst = os.path.join("share",fn,os.path.relpath(p,pkgdd))
+                        srcdfs = [os.path.join(p,df) for df in dfs]
+                        kwargs["data_files"].append( (dst,  srcdfs) )
 
     kwargs["scripts"] = [f for f in glob.glob(os.path.join(bindir,"*")) if os.path.isfile(f)]
     
     kwargs["package_dir"] = {'': 'src'}
-
-    if "package_data" in kwargs:
-        kwargs["include_package_data"] = True
-
-    import pprint
-    pprint.pprint(kwargs)
 
     return kwargs
 
