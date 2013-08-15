@@ -111,10 +111,13 @@ def _import_roslib(srcdir,bindir,ddir):
     #rewrite roslib to make load_manifest a noop and to set some env variables
 
     contents = """
+
 import sys
 import os.path
 import tempfile
 import pkg_resources
+
+_DBG = os.environ.get('ROS_FREEZE_DEBUG')
 
 os.environ['ROS_PACKAGE_PATH'] = tempfile.mkdtemp()
 os.environ['ROS_ROOT'] = os.environ.get('ROS_ROOT',sys.prefix)
@@ -130,7 +133,8 @@ def load_manifest(*args):
 
 def _get_pkg_dir(package, required=True, ros_root=None, ros_package_path=None):
     p = pkg_resources.resource_filename(__name__,os.path.join('..','share',package))
-    print "monkey patched get_pkg/stack_dir",package,"=",p
+    if _DBG:
+        print "monkey patched get_pkg/stack_dir",package,"=",p
     return p
 
 import roslib.packages
@@ -141,16 +145,29 @@ def _get_stack_dir(stack, env=None):
 
 roslib.stacks.get_stack_dir = _get_stack_dir
 
-import roslib.manifest
 def _manifest_file_by_dir(package_dir, required=True, env=None):
-    print "monkey patching manifest for", package_dir
+    f = os.path.join(package_dir,'manifest.xml')
+    if os.path.exists(f):
+        return f
+    if _DBG:
+        print "monkey patching get_manifest for", package_dir
     tdir = tempfile.mkdtemp()
     dest = os.path.join(tdir,'manifest.xml')
     with open(dest,'w') as f:
         f.write('<package></package>')
     return dest
+
+import roslib.manifest
 roslib.manifest._manifest_file_by_dir = _manifest_file_by_dir
 
+def _simple_depends(pkg):
+    if _DBG:
+        print "monkey patching rospack_depends for", pkg
+    return roslib.manifest.load_manifest(pgk).depends
+
+import roslib.rospack
+roslib.rospack.rospack_depends_1 = _simple_depends
+roslib.rospack.rospack_depends = _simple_depends
 """
     with open(os.path.join(srcdir,'roslib','__init__.py'),'w') as f:
         f.write(contents)
