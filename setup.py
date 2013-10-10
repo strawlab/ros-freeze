@@ -2,12 +2,16 @@ from setuptools import setup
 
 from build import import_ros_core, import_ros_package, get_disutils_cmds
 
-srcdir, bindir, datadir = import_ros_core(".")
-import_ros_package(srcdir, bindir, datadir, "rospy", data='data')
+MY_PACKAGE = ''
 
-setup(name='python-pyros',
+if MY_PACKAGE:
+    srcdir, bindir, datadir = import_ros_package(MY_PACKAGE, data='data')
+else:
+    srcdir, bindir, datadir = import_ros_core()
+
+setup(name='python-pyros' if not MY_PACKAGE else 'python-ros-%s' % MY_PACKAGE,
       version='1.0',
-      description='Pure Python Ros Core',
+      description='Pure Python Ros',
       author='John Stowers',
       author_email='john.stowers@gmail.com',
       url='https://github.com/nzjrs/python-ros.git',

@@ -11,6 +11,8 @@ import roslib.manifest
 
 IGNORES = (".pyc",".cpp",".c",".png",".h")
 
+SPECIAL_PACKAGES = ("rosmaster","roslaunch","ros","roslib")
+
 def _glob_dirs(root, recursive=False):
     if recursive:
         return [os.path.join(_root,_d) for _root,_dirnames,_filenames in os.walk(root) for _d in _dirnames]
@@ -67,6 +69,7 @@ def _copy_pkg_data(p, rel, ddir,required=True):
         _copy_recursively(src, dest)
 
 def _import_and_copy(p, odir):
+    print "freezing %s" % p
     mod = __import__(p)
     fn = mod.__file__
     if os.path.basename(fn).startswith("__init__"):
@@ -202,7 +205,7 @@ def import_packages(srcdir,bindir,ddir,*pkgs):
             if os.path.isdir(_bindir):
                 _copy_executables(_bindir, bindir)
 
-def import_ros_core(working_dir, *pkgs):
+def import_ros_core(working_dir='.'):
 
     srcdir = os.path.join(working_dir,"src")
     bindir = os.path.join(working_dir,"bin")
@@ -217,11 +220,9 @@ def import_ros_core(working_dir, *pkgs):
     _import_roslaunch(srcdir,bindir,datadir)
     _import_ros_binaries(bindir)
 
-    assert type(pkgs) == tuple
-
-    all_srvs = ["std_srvs"] + list(pkgs)
-    all_msgs = ["std_msgs","geometry_msgs","rosgraph_msgs"] + list(pkgs)
-    all_pkgs = ["rosgraph","rostopic","rosnode","rospy","rosbag"] + list(pkgs)
+    all_srvs = ["std_srvs"]
+    all_msgs = ["std_msgs","geometry_msgs","rosgraph_msgs"]
+    all_pkgs = ["rosgraph","rostopic","rosnode","rospy","rosbag"]
 
     import_srvs(srcdir,bindir,datadir,*all_srvs)
     import_msgs(srcdir,bindir,datadir,*all_msgs)
@@ -229,16 +230,27 @@ def import_ros_core(working_dir, *pkgs):
 
     return srcdir,bindir,datadir
 
-def import_ros_package(srcdir, bindir, datadir, pkg, data=None, deps=True):
-    if deps:
-        pkgs = [pkg] + roslib.manifest.load_manifest(pkg).depends
+def import_ros_package(pkg, data=None, deps=True, srcdir=None, bindir=None, datadir=None, working_dir='.'):
+    if srcdir is None:
+        srcdir, bindir, datadir = import_ros_core(working_dir)
+        roscore_imported = True
     else:
-        pkgs = [pkg]
+        roscore_imported = False
+
+    if deps:
+        pkgs = [str(pkg)] + [str(p) for p in roslib.manifest.load_manifest(pkg).depends]
+    else:
+        pkgs = [str(pkg)]
+
+    if roscore_imported:
+        for p in SPECIAL_PACKAGES:
+            try:
+                pkgs.remove(p)
+                print "skipping %s (already frozen)" % p
+            except ValueError:
+                pass
 
     for p in pkgs:
-        #ensure not unicode...
-        p = str(p)
-
         for d in (roslib.packages.MSG_DIR, roslib.packages.SRV_DIR):
             try:
                 _copy_pkg_data(p,d,datadir,required=True)
@@ -249,6 +261,8 @@ def import_ros_package(srcdir, bindir, datadir, pkg, data=None, deps=True):
 
     if data:
         _copy_pkg_data(pkg,data,datadir,required=True)
+
+    return srcdir, bindir, datadir
 
 def get_disutils_cmds(srcdir, bindir, datadir):
     kwargs = {
