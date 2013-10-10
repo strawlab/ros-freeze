@@ -13,12 +13,14 @@ An example is included (setup-freeze.py) that builds a python package containig 
 and all its dependencies, including the core ros command line tools
 (rostopic, rosnode, etc) and std_msgs.
 
-.. note:: why are there two setup.py files
-   setup.py builds a python package that contains *only* the rosfreeze script.
-   You may then install this on your system and use it to freeze other ROS packages.
+Why are there two setup.py files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   setup-freeze.py contains is an example setup.py file that you may,
-   from this source directory if you wish, modify and use to freeze your ROS package.
+setup.py builds a python package that contains *only* the rosfreeze script.
+You may then install this on your system and use it to freeze other ROS packages.
+
+setup-freeze.py contains is an example setup.py file that you may,
+from this source directory if you wish, modify and use to freeze your ROS package.
 
 Converting a ROS pacakge to a pure python package
 -------------------------------------------------
