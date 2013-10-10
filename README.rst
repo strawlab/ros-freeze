@@ -9,19 +9,26 @@ This tool has been tested on ROS Electric where it has been used to convert
 complex python ROS applications with dozens of dependencies to standalone
 python packages.
 
-By default this builds a python package containig rospy
-and all its dependencies, including the core ros command
-line tools (rostopic, rosnode, etc) and std_msgs.
+An example is included (setup-freeze.py) that builds a python package containig rospy
+and all its dependencies, including the core ros command line tools
+(rostopic, rosnode, etc) and std_msgs.
 
-To modify this to freeze *your* ROS package edit MY_PACKAGE in setup.py
+.. note:: why are there two setup.py files
+   setup.py builds a python package that contains *only* the rosfreeze script.
+   You may then install this on your system and use it to freeze other ROS packages.
+
+   setup-freeze.py contains is an example setup.py file that you may,
+   from this source directory if you wish, modify and use to freeze your ROS package.
 
 Converting a ROS pacakge to a pure python package
 -------------------------------------------------
 
-1. freeze the ROS package::
+1. modify the included setup-freeze.py (edit MY_PACKAGE)
+
+2. freeze the ROS package::
 
    $ source /path/to/your/ros/environment.sh
-   $ python setup.py build
+   $ python setup-freeze.py build
 
 2. build an egg::
 
@@ -30,7 +37,7 @@ Converting a ROS pacakge to a pure python package
 Running the pure python ROS
 ---------------------------
 
-1. install the egg file (in a virtual env for example)
+1. install the frozen ROS package generated egg (in a virtual env for example)
 2. roscore is not implemented fully (logging is not supported), but you
    can run roscore manually::
 
