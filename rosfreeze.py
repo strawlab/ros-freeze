@@ -166,7 +166,7 @@ roslib.manifest._manifest_file_by_dir = _manifest_file_by_dir
 def _simple_depends(pkg):
     if _DBG:
         print "monkey patching rospack_depends for", pkg
-    return roslib.manifest.load_manifest(pgk).depends
+    return roslib.manifest.load_manifest(pkg).depends
 
 import roslib.rospack
 roslib.rospack.rospack_depends_1 = _simple_depends
