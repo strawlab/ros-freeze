@@ -37,6 +37,9 @@ parser.add_argument('--version', default='0.1',
                     help='the version number of the built package')
 parser.add_argument('--sdist', action='store_true', default=False,
                     help='build a source package and not an egg')
+parser.add_argument('--only-dependencies', action='store_true', default=False,
+                    help='freeze only the specified packages dependencies, and '\
+                         'not the package itself')
 parser.add_argument('--description',
                     help='package description')
 parser.add_argument('--author', default=default_username, required=True if default_username is None else False,
@@ -53,8 +56,11 @@ except ImportError, e:
     parser.error('could not import ros (%s)' % e.message)
 
 args = parser.parse_args()
+
+only_deps = "_deps" if args.only_dependencies else ''
+
 package_name = args.package_name[0]
-package_desc = args.description if args.description else ('ros-frozen %s' % package_name)
+package_desc = args.description if args.description else ('ros-frozen %s%s' % (package_name, only_deps))
 
 thisdir = os.getcwd()
 tdir = tempfile.mkdtemp()
@@ -70,7 +76,7 @@ with open(setup,'w') as f:
     for k in kwargs:
         extra_args += "      %s=%s,\n" % (k,repr(kwargs[k]))
 
-    txt = SETUP_TEMPL % dict(name='python-ros-electric-%s' % package_name,
+    txt = SETUP_TEMPL % dict(name='python-ros-electric-%s%s' % (package_name, only_deps),
                              ver=args.version,
                              desc=package_desc,
                              author=args.author,

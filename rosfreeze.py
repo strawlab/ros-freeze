@@ -230,7 +230,7 @@ def import_ros_core(working_dir='.'):
 
     return srcdir,bindir,datadir
 
-def import_ros_package(pkg, data=None, deps=True, srcdir=None, bindir=None, datadir=None, working_dir='.'):
+def import_ros_package(pkg, data=None, deps=True, srcdir=None, bindir=None, datadir=None, working_dir='.', onlydeps=False):
     if srcdir is None:
         srcdir, bindir, datadir = import_ros_core(working_dir)
         roscore_imported = True
@@ -238,7 +238,11 @@ def import_ros_package(pkg, data=None, deps=True, srcdir=None, bindir=None, data
         roscore_imported = False
 
     if deps:
-        pkgs = [str(pkg)] + [str(p) for p in roslib.manifest.load_manifest(pkg).depends]
+        _deps = [str(p) for p in roslib.manifest.load_manifest(pkg).depends]
+        if onlydeps:
+            pkgs = _deps
+        else:
+            pkgs = [str(pkg)] + _deps
     else:
         pkgs = [str(pkg)]
 
