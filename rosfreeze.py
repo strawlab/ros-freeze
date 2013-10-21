@@ -299,7 +299,9 @@ def get_disutils_cmds(srcdir, bindir, datadir):
 
     kwargs["scripts"] = [f for f in glob.glob(os.path.join(bindir,"*")) if os.path.isfile(f)]
     
-    kwargs["package_dir"] = {'': 'src'}
+    kwargs["package_dir"] = {'': srcdir}
+
+    print kwargs
 
     return kwargs
 

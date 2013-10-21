@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+
+import os.path
+import argparse
+import tempfile
+import subprocess
+import glob
+import shutil
+
+SETUP_TEMPL = """
+from setuptools import setup
+
+setup(name='%(name)s',
+      version='%(ver)s',
+      description='%(desc)s',
+      author='%(author)s',
+      author_email='%(email)s',
+      %(extra_args)s
+)
+"""
+
+try:
+    default_username = subprocess.check_output(['git','config','user.name']).strip()
+except subprocess.CalledProcessError:
+    default_username = None
+
+try:
+    default_email = subprocess.check_output(['git','config','user.email']).strip()
+except subprocess.CalledProcessError:
+    default_email = None
+
+
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('package_name', nargs=1,
+                    help='the ros package name to freeze')
+parser.add_argument('--version', default='0.1',
+                    help='the version number of the built package')
+parser.add_argument('--sdist', action='store_true', default=False,
+                    help='build a source package and not an egg')
+parser.add_argument('--description',
+                    help='package description')
+parser.add_argument('--author', default=default_username, required=True if default_username is None else False,
+                    help="package author")
+parser.add_argument('--email', default=default_email, required=True if default_email is None else False,
+                    help="package author email")
+
+if 'ROS_ROOT' not in os.environ:
+    parser.error('must be run from within a ros environment')
+
+try:
+    from rosfreeze import import_ros_core, import_ros_package, get_disutils_cmds
+except ImportError, e:
+    parser.error('could not import ros (%s)' % e.message)
+
+args = parser.parse_args()
+package_name = args.package_name[0]
+package_desc = args.description if args.description else ('ros-frozen %s' % package_name)
+
+thisdir = os.getcwd()
+tdir = tempfile.mkdtemp()
+
+os.chdir(tdir)
+
+srcdir, bindir, datadir = import_ros_package(package_name, data='data')
+kwargs = get_disutils_cmds(srcdir, bindir, datadir)
+
+setup = os.path.join(tdir, 'setup.py')
+with open(setup,'w') as f:
+    extra_args = ""
+    for k in kwargs:
+        extra_args += "      %s=%s,\n" % (k,repr(kwargs[k]))
+
+    txt = SETUP_TEMPL % dict(name='python-ros-electric-%s' % package_name,
+                             ver=args.version,
+                             desc=package_desc,
+                             author=args.author,
+                             email=args.email,
+                             extra_args=extra_args)
+    f.write(txt)
+
+subprocess.check_call(['python', './setup.py', 'build'], cwd=tdir)
+if args.sdist:
+    subprocess.check_call(['python', './setup.py', 'sdist'], cwd=tdir)
+else:
+    subprocess.check_call(['python', './setup.py', 'bdist_egg'], cwd=tdir)
+
+distfile = glob.glob(os.path.join(tdir,'dist','*.*'))[0]
+shutil.copy(distfile, thisdir)
+
+print "="*40
+print "created", os.path.basename(distfile)
+print "="*40
+
+
+
