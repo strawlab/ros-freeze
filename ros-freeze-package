@@ -83,6 +83,9 @@ with open(setup,'w') as f:
                              email=args.email,
                              extra_args=extra_args)
     f.write(txt)
+manifest = os.path.join(tdir, 'MANIFEST.in')
+with open(manifest, 'w') as f:
+    f.write("recursive-include data *.*\n")
 
 subprocess.check_call(['python', './setup.py', 'build'], cwd=tdir)
 if args.sdist:
