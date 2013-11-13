@@ -76,7 +76,7 @@ with open(setup,'w') as f:
     for k in kwargs:
         extra_args += "      %s=%s,\n" % (k,repr(kwargs[k]))
 
-    txt = SETUP_TEMPL % dict(name='python-ros-electric-%s%s' % (package_name, only_deps),
+    txt = SETUP_TEMPL % dict(name='ros-electric-%s%s' % (package_name, only_deps),
                              ver=args.version,
                              desc=package_desc,
                              author=args.author,
