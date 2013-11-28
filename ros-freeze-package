@@ -35,8 +35,8 @@ parser.add_argument('package_name', nargs=1,
                     help='the ros package name to freeze')
 parser.add_argument('--version', default='0.1',
                     help='the version number of the built package')
-parser.add_argument('--sdist', action='store_true', default=False,
-                    help='build a source package and not an egg')
+parser.add_argument('--egg', action='store_true', default=False,
+                    help='build an egg and not a source package')
 parser.add_argument('--only-dependencies', action='store_true', default=False,
                     help='freeze only the specified packages dependencies, and '\
                          'not the package itself')
@@ -88,10 +88,10 @@ with open(manifest, 'w') as f:
     f.write("recursive-include data *.*\n")
 
 subprocess.check_call(['python', './setup.py', 'build'], cwd=tdir)
-if args.sdist:
-    subprocess.check_call(['python', './setup.py', 'sdist'], cwd=tdir)
-else:
+if args.egg:
     subprocess.check_call(['python', './setup.py', 'bdist_egg'], cwd=tdir)
+else:
+    subprocess.check_call(['python', './setup.py', 'sdist'], cwd=tdir)
 
 distfile = glob.glob(os.path.join(tdir,'dist','*.*'))[0]
 shutil.copy(distfile, thisdir)
