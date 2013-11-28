@@ -113,7 +113,7 @@ def _import_roslib(srcdir,bindir,ddir):
     _import_and_copy("roslib",srcdir)
     #rewrite roslib to make load_manifest a noop and to set some env variables
 
-    contents = """
+    contents = r"""
 
 import sys
 import os.path
@@ -135,9 +135,20 @@ def load_manifest(*args):
     pass
 
 def _get_pkg_dir(package, required=True, ros_root=None, ros_package_path=None):
-    p = pkg_resources.resource_filename(__name__,os.path.join('..','share',package))
+    #this works if we are run from an egg install
+    p_egg = pkg_resources.resource_filename(__name__,os.path.join('..','share',package))
+    #this works for installs in virtual envs
+    p_env = os.path.join(sys.prefix,'share',package)
+    #i hate python packaging.
+    if os.path.exists(p_egg):
+        p = p_egg
+    elif os.path.exists(p_env):
+        p = p_env
+    else:
+        p = '/dev/null/not_found'
     if _DBG:
-        print "monkey patched get_pkg/stack_dir",package,"=",p
+        print "monkey patched get_pkg/stack_dir %s (in egg: %c) = \n\t%s" % (
+                package,'Y' if '.egg' in p_egg else 'N',p)
     return p
 
 import roslib.packages
