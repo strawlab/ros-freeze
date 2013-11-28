@@ -13,13 +13,27 @@ An example is included (setup-freeze.py) that builds a python package containig 
 and all its dependencies, including the core ros command line tools
 (rostopic, rosnode, etc) and std_msgs.
 
-Why are there two setup.py files?
-"""""""""""""""""""""""""""""""""
+How to use (simple)
+"""""""""""""""""""
 
-setup.py builds a python package that contains *only* the rosfreeze script.
-You may then install this on your system and use it to freeze other ROS packages.
+After checking out this repository, use the included ``ros-freeze-package``
+command
 
-setup-freeze.py contains is an example setup.py file that you may,
+   $ ./ros-freeze-package --version 0.3 my-package
+
+the command will try and guess your name and email from your git configuration.
+you can also set them manually using ``--author`` and ``email``. You can also
+build an egg binary package using ``--egg``.
+
+How to use (advanced)
+"""""""""""""""""""""
+
+You may wish to integrate ros-freeze into your build system, such as by adding
+a setup.py to your ros package. For example, this allows you to use
+ros-freeze to build a standalone python package every time you rebuild your ROS
+package.
+
+*examples/example-setup.py* contains is an example setup.py file that you may,
 from this source directory if you wish, modify and use to freeze your ROS package.
 
 Converting a ROS pacakge to a pure python package
@@ -37,9 +51,9 @@ Converting a ROS pacakge to a pure python package
    $ python setup.py bdist_egg
 
 Running the pure python ROS
----------------------------
+"""""""""""""""""""""""""""
 
-1. install the frozen ROS package generated egg (in a virtual env for example)
+1. install the frozen ROS package (in a virtual env for example)
 2. roscore is not implemented fully (logging is not supported), but you
    can run roscore manually::
 
