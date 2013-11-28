@@ -50,8 +50,8 @@ Converting a ROS pacakge to a pure python package
 
    $ python setup.py bdist_egg
 
-Running the pure python ROS
-"""""""""""""""""""""""""""
+Running a complex pure python ROS package
+"""""""""""""""""""""""""""""""""""""""""
 
 1. install the frozen ROS package (in a virtual env for example)
 2. roscore is not implemented fully (logging is not supported), but you
