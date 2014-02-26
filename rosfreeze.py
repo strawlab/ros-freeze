@@ -15,9 +15,15 @@ SPECIAL_PACKAGES = ("rosmaster","roslaunch","ros","roslib")
 
 def _glob_dirs(root, recursive=False):
     if recursive:
-        return [os.path.join(_root,_d) for _root,_dirnames,_filenames in os.walk(root) for _d in _dirnames]
+        dirs = []
+        for _root,_dirnames,_filenames in os.walk(root, topdown=True):
+            #remove hidden directories
+            _dirnames[:] = [d for d in _dirnames if not d[0] == '.']
+            dirs.extend(os.path.join(_root,d) for d in _dirnames)
     else:
-        return [i for i in glob.glob(os.path.join(root,"*")) if os.path.isdir(i)]
+        dirs = [i for i in glob.glob(os.path.join(root,"*")) if os.path.isdir(i)]
+
+    return dirs
 
 def _remove_empty_folders(path, removed=[]):
     if not os.path.isdir(path):
