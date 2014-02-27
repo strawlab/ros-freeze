@@ -19,11 +19,13 @@ How to use (simple)
 After checking out this repository, use the included ``ros-freeze-package``
 command
 
-   $ ./ros-freeze-package --version 0.3 my-package
+   $ ./ros-freeze-package --version 0.3 my_ros_package
 
 the command will try and guess your name and email from your git configuration.
 you can also set them manually using ``--author`` and ``email``. You can also
 build an egg binary package using ``--egg``.
+
+   $ ./ros-freeze-package --egg --version 0.3 my_ros_package
 
 How to use (advanced)
 """""""""""""""""""""
