@@ -239,7 +239,7 @@ def import_ros_core(working_dir='.'):
 
     all_srvs = ["std_srvs"]
     all_msgs = ["std_msgs","geometry_msgs","rosgraph_msgs"]
-    all_pkgs = ["rosgraph","rostopic","rosnode","rospy","rosbag"]
+    all_pkgs = ["rosgraph","rostopic","rosnode","rospy","rosbag","rosparam"]
 
     import_srvs(srcdir,bindir,datadir,*all_srvs)
     import_msgs(srcdir,bindir,datadir,*all_msgs)
