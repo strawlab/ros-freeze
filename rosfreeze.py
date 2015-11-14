@@ -211,8 +211,8 @@ def import_packages(srcdir,bindir,ddir,*pkgs):
         roslib.load_manifest(p)
         try:
             fn = _import_and_copy(p, srcdir)
-        except ImportError:
-            pass
+        except ImportError as e:
+            print "could not import", p
 
         #base  = os.path.abspath(roslib.packages.get_pkg_dir(p, required=True))
         _copy_pkg_data(p, "manifest.xml", ddir)
