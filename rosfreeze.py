@@ -322,7 +322,7 @@ def get_disutils_cmds(srcdir, bindir, datadir):
     
     kwargs["package_dir"] = {'': srcdir}
 
-    print kwargs
+    # print kwargs
 
     return kwargs
 
